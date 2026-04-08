@@ -1,15 +1,27 @@
 import { useState } from "react";
-import { Plus, Filter, Search, CheckCircle2, Terminal } from "lucide-react";
+import { Plus, Filter, Search, CheckCircle2, Terminal, Edit3, Trash2 } from "lucide-react";
 import DataTable from "../components/ui/DataTable";
 import Form from "../components/ui/Form";
 import { Skeleton, TableSkeleton } from "../components/ui/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTransactions, useSettleTransaction } from "../features/transactions/hooks";
+import { 
+  useTransactions, 
+  useSettleTransaction, 
+  useDeleteTransaction 
+} from "../features/transactions/hooks";
 
 export default function Transactions() {
   const [showForm, setShowForm] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
   const { data: transactions = [], isLoading } = useTransactions();
   const { mutate: settleTransaction } = useSettleTransaction();
+  const { mutate: deleteTransaction } = useDeleteTransaction();
+
+  const handleDelete = (id) => {
+    if (window.confirm("ARE_YOU_SURE? THIS_ACTION_IS_IRREVERSIBLE.")) {
+      deleteTransaction(id);
+    }
+  };
 
   const columns = [
     { header: "Date", accessorKey: "date", cell: info => <span className="font-mono text-xs opacity-70 group-hover:opacity-100">{new Date(info.getValue()).toLocaleDateString()}</span> },
@@ -34,17 +46,33 @@ export default function Transactions() {
       header: "Ops",
       cell: (info) => {
         const t = info.row.original;
-        if (t.type === "CREDIT" && t.status === "PENDING") {
-          return (
+        return (
+          <div className="flex items-center gap-2">
+            {t.type === "CREDIT" && t.status === "PENDING" && (
+              <button 
+                onClick={() => settleTransaction(t.id)}
+                title="Settle"
+                className="p-2 text-[#00E599] hover:bg-[#00E599] hover:text-black transition-all border border-[#00E599]/20"
+              >
+                <CheckCircle2 size={14} />
+              </button>
+            )}
             <button 
-              onClick={() => settleTransaction(t.id)}
-              className="text-[10px] font-bold uppercase tracking-widest text-black bg-[#00E599] hover:bg-white hover:text-black px-3 py-2 transition-all"
+              onClick={() => setEditingTransaction(t)}
+              title="Edit"
+              className="p-2 text-white/40 hover:text-white hover:bg-white/10 transition-all border border-white/5"
             >
-              Commit
+              <Edit3 size={14} />
             </button>
-          );
-        }
-        return <div className="h-1 w-4 bg-white/10" />;
+            <button 
+              onClick={() => handleDelete(t.id)}
+              title="Delete"
+              className="p-2 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-red-500/10"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        );
       },
     },
   ];
@@ -101,14 +129,31 @@ export default function Transactions() {
       </motion.div>
 
       <AnimatePresence>
-        {showForm && (
+        {(showForm || editingTransaction) && (
           <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="border border-[#00E599]/30 bg-black overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 md:p-8"
           >
-            <Form onComplete={() => setShowForm(false)} onCancel={() => setShowForm(false)} />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-4xl max-h-full overflow-y-auto custom-scrollbar shadow-[0_0_100px_rgba(0,229,153,0.1)]"
+            >
+              <Form 
+                initialData={editingTransaction}
+                onComplete={() => {
+                  setShowForm(false);
+                  setEditingTransaction(null);
+                }} 
+                onCancel={() => {
+                  setShowForm(false);
+                  setEditingTransaction(null);
+                }} 
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

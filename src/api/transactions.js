@@ -13,4 +13,15 @@ export const transactionService = {
     method: 'PATCH',
     getToken,
   }),
+
+  update: (id, data, getToken) => apiClient(`/transactions/${id}`, {
+    method: 'PATCH',
+    body: data,
+    getToken,
+  }),
+
+  delete: (id, getToken) => apiClient(`/transactions/${id}`, {
+    method: 'DELETE',
+    getToken,
+  }),
 };

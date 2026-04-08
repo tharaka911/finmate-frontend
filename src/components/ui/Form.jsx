@@ -1,41 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Save, Terminal } from "lucide-react";
-import { useAddTransaction } from "../../features/transactions/hooks";
+import { useAddTransaction, useUpdateTransaction } from "../../features/transactions/hooks";
 
 const CATEGORIES = ["GROCERY", "FOOD", "FUN", "VEHICLE", "OTHER"];
 const TYPES = ["CASH", "CREDIT"];
 
-export default function Form({ onComplete, onCancel }) {
-  const { mutate: addTransaction, isPending } = useAddTransaction();
+export default function Form({ onComplete, onCancel, initialData }) {
+  const isEditing = !!initialData;
+  const { mutate: addTransaction, isPending: isAdding } = useAddTransaction();
+  const { mutate: updateTransaction, isPending: isUpdating } = useUpdateTransaction();
+  
+  const isPending = isAdding || isUpdating;
+
   const [formData, setFormData] = useState({
-    amount: "",
-    date: new Date().toISOString().split("T")[0],
-    type: "CASH",
-    category: "GROCERY",
-    notes: "",
-    status: "PENDING"
+    amount: initialData?.amount || "",
+    date: initialData?.date 
+      ? new Date(initialData.date).toISOString().split("T")[0] 
+      : new Date().toISOString().split("T")[0],
+    type: initialData?.type || "CASH",
+    category: initialData?.category || "GROCERY",
+    notes: initialData?.notes || "",
+    status: initialData?.status || "PENDING"
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    addTransaction({
+    const payload = {
       ...formData,
       amount: parseFloat(formData.amount),
-    }, {
-      onSuccess: () => {
-        onComplete();
-      }
-    });
+    };
+
+    if (isEditing) {
+      updateTransaction({ id: initialData.id, data: payload }, {
+        onSuccess: () => onComplete(),
+      });
+    } else {
+      addTransaction(payload, {
+        onSuccess: () => onComplete(),
+      });
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-12 bg-black border border-[#00E599]/20 shadow-[0_0_50px_rgba(0,229,153,0.05)]">
+    <form onSubmit={handleSubmit} className={`p-8 md:p-12 space-y-12 bg-black border ${isEditing ? 'border-white/20' : 'border-[#00E599]/20'} shadow-[0_0_50px_rgba(0,229,153,0.05)]`}>
       <div className="flex justify-between items-end border-b border-white/10 pb-6">
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-[#00E599] font-mono text-xs uppercase tracking-widest">
-            <Terminal size={14} /> NEW ENTTITY_RECORD
+            <Terminal size={14} /> {isEditing ? 'UPDATE_ENTITY_RECORD' : 'NEW_ENTITY_RECORD'}
           </div>
-          <h3 className="text-3xl font-extrabold tracking-tighter text-white">Capture Transaction</h3>
+          <h3 className="text-3xl font-extrabold tracking-tighter text-white">
+            {isEditing ? 'Modify Transaction' : 'Capture Transaction'}
+          </h3>
         </div>
         <button type="button" onClick={onCancel} className="text-muted-foreground hover:text-white transition-colors p-2">
           <X size={20} />
