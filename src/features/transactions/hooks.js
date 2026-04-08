@@ -1,39 +1,15 @@
-import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
 import { transactionService } from '../../api/transactions';
 
-/**
- * ANTI-GHOSTING ENGINE
- * We use a global Set outside of React state to ensure 100% consistency.
- * This is the only way to guarantee that a deleted ID is filtered synchronously
- * regardless of network refetches or query invalidations.
- */
-const GLOBAL_DELETION_BLACKLIST = new Set();
-
-
 export const useTransactions = () => {
   const { getToken } = useAuth();
   
-  const query = useQuery({
+  return useQuery({
     queryKey: ['transactions'],
     queryFn: () => transactionService.getAll(getToken),
     staleTime: 1000 * 60 * 5,
   });
-
-  // Since GLOBAL_DELETION_BLACKLIST is global, we don't need a separate useQuery for it
-  // But we want to trigger a re-render when it changes, so we'll use a local tick if needed
-  // However, the mutation below will trigger an optimistic update on ['transactions']
-  // which WILL cause a re-render here.
-  
-  const filteredData = useMemo(() => {
-    const rawData = query.data || [];
-    if (GLOBAL_DELETION_BLACKLIST.size === 0) return rawData;
-    
-    return rawData.filter(t => !GLOBAL_DELETION_BLACKLIST.has(String(t.id)));
-  }, [query.data, GLOBAL_DELETION_BLACKLIST.size]); // Use size to trigger re-calc on change
-
-  return { ...query, data: filteredData };
 };
 
 export const useAddTransaction = () => {
@@ -82,32 +58,30 @@ export const useDeleteTransaction = () => {
       await queryClient.cancelQueries({ queryKey: ['transactions'] });
       const previousTotalData = queryClient.getQueryData(['transactions']);
 
-      // 2. Atomic Blacklist Update (Global)
-      const stringId = String(id);
-      GLOBAL_DELETION_BLACKLIST.add(stringId);
-
-      // 3. Optimistically update the cache
+      // 2. Optimistically update the cache
       queryClient.setQueryData(['transactions'], (old) => 
-        old ? old.filter((t) => String(t.id) !== stringId) : []
+        old ? old.filter((t) => t.id !== id) : []
       );
 
-      return { previousTotalData, deletedId: stringId };
+      return { previousTotalData, deletedId: id };
     },
-    onSuccess: () => {
-      // Success. We keep it in the blacklist to prevent ghosting during background sweeps.
+    onSuccess: (data, id, context) => {
+      // Reinforce the deletion in cache on success
+      queryClient.setQueryData(['transactions'], (old) => 
+        old ? old.filter((t) => t.id !== context.deletedId) : []
+      );
     },
     onError: (err, id, context) => {
-      // Rollback
-      GLOBAL_DELETION_BLACKLIST.delete(context.deletedId);
-      
+      // Rollback on error
       if (context?.previousTotalData) {
         queryClient.setQueryData(['transactions'], context.previousTotalData);
       }
     },
     onSettled: () => {
-      // PRO-TIP: We DO NOT invalidate immediately on success here.
-      // This eliminates the "Fast Refetch Race Condition".
-      // The background sync will happen eventually (every 5 mins).
+      // Small delay to ensure DB sync before refetching
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      }, 500);
     },
   });
 };
