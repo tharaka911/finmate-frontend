@@ -26,7 +26,10 @@ export default function Transactions() {
   const confirmDelete = () => {
     if (transactionToDelete) {
       deleteTransaction(transactionToDelete.id);
+      // Force all overlay states to close to prevent "ghost" modals
       setTransactionToDelete(null);
+      setEditingTransaction(null);
+      setShowForm(false);
     }
   };
 
@@ -50,7 +53,7 @@ export default function Transactions() {
       </span>
     )},
     {
-      header: "Ops",
+      header: "Actions",
       cell: (info) => {
         const t = info.row.original;
         return (
@@ -123,7 +126,7 @@ export default function Transactions() {
         <div className="space-y-4">
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tighter text-white">Transactions</h2>
           <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground flex items-center gap-2">
-            <Terminal size={12} className="text-[#00E599]" /> Data stream
+            <Terminal size={12} className="text-[#00E599]" /> Activity Log
           </p>
         </div>
         <button 
@@ -131,7 +134,7 @@ export default function Transactions() {
           className="w-full md:w-auto flex items-center justify-center gap-2 bg-white text-black font-extrabold px-8 py-3 hover:bg-[#00E599] transition-all uppercase tracking-widest text-[10px]"
         >
           <Plus size={16} strokeWidth={3} />
-          {showForm ? 'Cancel Entry' : 'Append Record'}
+          {showForm ? 'Cancel' : 'Add Transaction'}
         </button>
       </motion.div>
 
@@ -181,7 +184,7 @@ export default function Transactions() {
              <Search size={14} className="text-muted-foreground" />
              <input 
                type="text" 
-               placeholder="QUERY TRANSACTION LOGS..." 
+               placeholder="Search transactions..." 
                className="bg-transparent border-none focus:ring-0 text-[10px] font-bold uppercase tracking-[0.1em] w-full placeholder:opacity-30"
              />
           </div>

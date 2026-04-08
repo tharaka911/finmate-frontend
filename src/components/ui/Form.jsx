@@ -46,10 +46,10 @@ export default function Form({ onComplete, onCancel, initialData }) {
       <div className="flex justify-between items-end border-b border-white/10 pb-6">
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-[#00E599] font-mono text-xs uppercase tracking-widest">
-            <Terminal size={14} /> {isEditing ? 'UPDATE_ENTITY_RECORD' : 'NEW_ENTITY_RECORD'}
+            <Terminal size={14} /> {isEditing ? 'UPDATE_TRANSACTION' : 'NEW_TRANSACTION'}
           </div>
           <h3 className="text-3xl font-extrabold tracking-tighter text-white">
-            {isEditing ? 'Modify Transaction' : 'Capture Transaction'}
+            {isEditing ? 'Modify Transaction' : 'New Transaction'}
           </h3>
         </div>
         <button type="button" onClick={onCancel} className="text-muted-foreground hover:text-white transition-colors p-2">
@@ -59,7 +59,7 @@ export default function Form({ onComplete, onCancel, initialData }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
         <div className="space-y-3">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Magnitude ($)</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Amount ($)</label>
           <input
             required
             type="number"
@@ -83,7 +83,7 @@ export default function Form({ onComplete, onCancel, initialData }) {
         </div>
 
         <div className="space-y-3">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Transaction Mode</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Payment Method</label>
           <div className="grid grid-cols-2 gap-0 border border-white/10">
             {TYPES.map(t => (
               <button 
@@ -99,7 +99,7 @@ export default function Form({ onComplete, onCancel, initialData }) {
         </div>
 
         <div className="space-y-3">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Classification</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Category</label>
           <select
             className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-white focus:border-[#00E599] outline-none transition-all appearance-none cursor-pointer"
             value={formData.category}
@@ -112,10 +112,10 @@ export default function Form({ onComplete, onCancel, initialData }) {
         </div>
 
         <div className="md:col-span-2 space-y-3">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Annotations</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Notes</label>
           <textarea
             className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-4 text-sm text-white focus:border-[#00E599] focus:ring-1 focus:ring-[#00E599]/20 outline-none transition-all min-h-[100px] placeholder:opacity-20"
-            placeholder="ADDITIONAL_DATA_ENTRY..."
+            placeholder="Add some notes..." 
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           />
@@ -129,14 +129,14 @@ export default function Form({ onComplete, onCancel, initialData }) {
           className="flex-1 bg-white text-black font-extrabold px-10 py-5 hover:bg-[#00E599] transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-xs disabled:opacity-50"
         >
           <Save size={18} />
-          {isPending ? 'COMMITTING...' : 'COMMIT_TRANSACTION'}
+          {isPending ? 'SAVING...' : 'SAVE_TRANSACTION'}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="px-10 py-5 font-bold bg-white/5 hover:bg-white/10 transition-colors border-l border-white/10 text-white uppercase tracking-[0.2em] text-xs"
         >
-          Abort
+          Cancel
         </button>
       </div>
     </form>

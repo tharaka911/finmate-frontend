@@ -7,9 +7,9 @@ export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, c
       <div className="flex justify-between items-start border-b border-white/10 pb-6">
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-red-500 font-mono text-xs uppercase tracking-widest">
-            <AlertTriangle size={14} /> DANGER_ZONE.CRITICAL_ACTION
+            <AlertTriangle size={14} /> CRITICAL_ACTION_REQUIRED
           </div>
-          <h3 className="text-3xl font-extrabold tracking-tighter text-white">Destroy Record?</h3>
+          <h3 className="text-3xl font-extrabold tracking-tighter text-white">Delete Transaction?</h3>
         </div>
         <button type="button" onClick={onCancel} className="text-muted-foreground hover:text-white transition-colors p-2">
           <X size={20} />
@@ -42,14 +42,14 @@ export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, c
           ) : (
             <Trash2 size={18} />
           )}
-          {isDeleting ? "Purging..." : "Confirm_Destroy"}
+          {isDeleting ? "Deleting..." : "Delete Permanent"}
         </button>
         <button
           onClick={onCancel}
           disabled={isDeleting}
           className="flex-1 px-8 py-5 font-bold bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-white/10 text-white uppercase tracking-[0.2em] text-xs"
         >
-          Abort_Action
+          Cancel
         </button>
       </div>
       
