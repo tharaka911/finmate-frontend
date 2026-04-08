@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 160 100% 45%; /* Neon Green #00E599 */
+  --accent-foreground: 0 0% 0%;
+  --popover: 0 0% 0%;
+  --popover-foreground: 0 0% 100%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --card: 0 0% 4%;
+  --card-foreground: 0 0% 100%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 100%;
+  --ring: 160 100% 45%;
+  --radius: 0.1rem; /* Sharper corners like Neon */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(0, 229, 153, 0.05), transparent 40%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+    background-attachment: fixed;
+  }
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2E2E32;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3E3E42;
+}
+
+/* Neon Glow Effect */
+.neon-glow {
+  box-shadow: 0 0 20px rgba(0, 229, 153, 0.1);
+  border: 1px solid rgba(0, 229, 153, 0.2);
+}
+
+/* Dashed row separator */
+.dashed-border {
+  border-bottom: 1px dashed #2E2E32;
+}
+
+/* Mobile-friendly horizontal scroll */
+.table-container {
+  @apply overflow-x-auto;
+  -webkit-overflow-scrolling: touch;
+}

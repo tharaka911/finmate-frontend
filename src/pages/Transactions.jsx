@@ -1,0 +1,142 @@
+import { useState } from "react";
+import { Plus, Filter, Search, CheckCircle2, Terminal } from "lucide-react";
+import DataTable from "../components/ui/DataTable";
+import Form from "../components/ui/Form";
+import { Skeleton, TableSkeleton } from "../components/ui/Skeleton";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTransactions, useSettleTransaction } from "../features/transactions/hooks";
+
+export default function Transactions() {
+  const [showForm, setShowForm] = useState(false);
+  const { data: transactions = [], isLoading } = useTransactions();
+  const { mutate: settleTransaction } = useSettleTransaction();
+
+  const columns = [
+    { header: "Date", accessorKey: "date", cell: info => <span className="font-mono text-xs opacity-70 group-hover:opacity-100">{new Date(info.getValue()).toLocaleDateString()}</span> },
+    { header: "Amount", accessorKey: "amount", cell: info => (
+      <span className="font-mono text-white text-base font-bold">${info.getValue().toFixed(2)}</span>
+    )},
+    { header: "Type", accessorKey: "type", cell: info => (
+      <span className={`text-[10px] uppercase font-bold tracking-[0.2em] px-2 py-1 border border-current ${info.getValue() === "CASH" ? "text-[#00E599] border-[#00E599]/30" : "text-white opacity-40 border-white/10"}`}>
+        {info.getValue()}
+      </span>
+    )},
+    { header: "Category", accessorKey: "category", cell: info => (
+      <span className="text-[10px] uppercase font-bold tracking-widest text-[#9B9B9B]">{info.getValue()}</span>
+    )},
+    { header: "Status", accessorKey: "status", cell: info => (
+      <span className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest ${info.getValue() === "SETTLED" ? "text-white/30" : "text-amber-400"}`}>
+        {info.getValue() === "SETTLED" ? <CheckCircle2 size={12} /> : <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.5)] animate-pulse" />}
+        {info.getValue()}
+      </span>
+    )},
+    {
+      header: "Ops",
+      cell: (info) => {
+        const t = info.row.original;
+        if (t.type === "CREDIT" && t.status === "PENDING") {
+          return (
+            <button 
+              onClick={() => settleTransaction(t.id)}
+              className="text-[10px] font-bold uppercase tracking-widest text-black bg-[#00E599] hover:bg-white hover:text-black px-3 py-2 transition-all"
+            >
+              Commit
+            </button>
+          );
+        }
+        return <div className="h-1 w-4 bg-white/10" />;
+      },
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-12">
+        <div className="flex justify-between items-end border-b border-border pb-8">
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-48 bg-white/5" />
+                <Skeleton className="h-4 w-64 bg-white/5" />
+            </div>
+            <Skeleton className="h-12 w-40 bg-white/5" />
+        </div>
+        <TableSkeleton />
+      </div>
+    );
+  }
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.05 }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 }
+  };
+
+  return (
+    <motion.div 
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-12 pb-20"
+    >
+      <motion.div variants={item} className="flex flex-col md:flex-row justify-between items-start border-b border-white/5 pb-8 gap-6">
+        <div className="space-y-4">
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tighter text-white">Transactions</h2>
+          <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground flex items-center gap-2">
+            <Terminal size={12} className="text-[#00E599]" /> Data stream
+          </p>
+        </div>
+        <button 
+          onClick={() => setShowForm(!showForm)}
+          className="w-full md:w-auto flex items-center justify-center gap-2 bg-white text-black font-extrabold px-8 py-3 hover:bg-[#00E599] transition-all uppercase tracking-widest text-[10px]"
+        >
+          <Plus size={16} strokeWidth={3} />
+          {showForm ? 'Cancel Entry' : 'Append Record'}
+        </button>
+      </motion.div>
+
+      <AnimatePresence>
+        {showForm && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border border-[#00E599]/30 bg-black overflow-hidden"
+          >
+            <Form onComplete={() => setShowForm(false)} onCancel={() => setShowForm(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div variants={item} className="space-y-6">
+        <div className="flex flex-col lg:flex-row gap-0 border border-border divide-y lg:divide-y-0 lg:divide-x divide-border">
+          <div className="flex items-center gap-4 flex-1 px-6 py-4 bg-black/50">
+             <Search size={14} className="text-muted-foreground" />
+             <input 
+               type="text" 
+               placeholder="QUERY TRANSACTION LOGS..." 
+               className="bg-transparent border-none focus:ring-0 text-[10px] font-bold uppercase tracking-[0.1em] w-full placeholder:opacity-30"
+             />
+          </div>
+          <div className="flex divide-x divide-border">
+            <button className="flex items-center gap-3 px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-[#00E599] transition-colors">
+              <Filter size={12} /> Sort
+            </button>
+            <button className="flex items-center gap-3 px-8 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-[#00E599] transition-colors">
+              Category
+            </button>
+          </div>
+        </div>
+
+        <div className="border border-border">
+            <DataTable columns={columns} data={transactions} />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
