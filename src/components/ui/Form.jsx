@@ -46,7 +46,7 @@ export default function Form({ onComplete, onCancel, initialData }) {
       <div className="flex justify-between items-end border-b border-white/10 pb-6">
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-[#00E599] font-mono text-xs uppercase tracking-widest">
-            <Terminal size={14} /> {isEditing ? 'UPDATE_TRANSACTION' : 'NEW_TRANSACTION'}
+            <Terminal size={14} /> {isEditing ? 'EDIT_ENTRY' : 'ADD_ENTRY'}
           </div>
           <h3 className="text-3xl font-extrabold tracking-tighter text-white">
             {isEditing ? 'Modify Transaction' : 'New Transaction'}
@@ -72,7 +72,7 @@ export default function Form({ onComplete, onCancel, initialData }) {
         </div>
 
         <div className="space-y-3">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Timestamp</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Date</label>
           <input
             required
             type="date"
@@ -129,7 +129,7 @@ export default function Form({ onComplete, onCancel, initialData }) {
           className="flex-1 bg-white text-black font-extrabold px-10 py-5 hover:bg-[#00E599] transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-xs disabled:opacity-50"
         >
           <Save size={18} />
-          {isPending ? 'SAVING...' : 'SAVE_TRANSACTION'}
+          {isPending ? 'SAVING...' : isEditing ? 'UPDATE_CHANGES' : 'SAVE_TRANSACTION'}
         </button>
         <button
           type="button"

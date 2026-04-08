@@ -126,7 +126,7 @@ export default function Transactions() {
         <div className="space-y-4">
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tighter text-white">Transactions</h2>
           <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground flex items-center gap-2">
-            <Terminal size={12} className="text-[#00E599]" /> Activity Log
+            <Terminal size={12} className="text-[#00E599]" /> History
           </p>
         </div>
         <button 

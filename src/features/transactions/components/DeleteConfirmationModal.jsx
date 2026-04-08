@@ -7,7 +7,7 @@ export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, c
       <div className="flex justify-between items-start border-b border-white/10 pb-6">
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-red-500 font-mono text-xs uppercase tracking-widest">
-            <AlertTriangle size={14} /> CRITICAL_ACTION_REQUIRED
+            <AlertTriangle size={14} /> WARNING: ACTION REQUIRED
           </div>
           <h3 className="text-3xl font-extrabold tracking-tighter text-white">Delete Transaction?</h3>
         </div>
@@ -18,7 +18,7 @@ export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, c
 
       <div className="space-y-6">
         <div className="bg-red-500/5 border-l-2 border-red-500 p-6 space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 opacity-60">Entity Metadata</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 opacity-60">Transaction Details</p>
           <div className="flex justify-between items-baseline">
             <span className="text-2xl font-mono text-white font-bold">${amount.toFixed(2)}</span>
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{category}</span>
@@ -26,8 +26,8 @@ export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, c
         </div>
 
         <p className="text-sm text-muted-foreground leading-relaxed">
-          You are about to purge this transaction from the telemetry stream. 
-          <span className="text-white font-bold"> This action cannot be reversed.</span> All associated analytical data will be permanently deleted.
+          You are about to delete this transaction from your records. 
+          <span className="text-white font-bold"> This action cannot be reversed.</span> All associated data will be permanently removed.
         </p>
       </div>
 
@@ -42,7 +42,7 @@ export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, c
           ) : (
             <Trash2 size={18} />
           )}
-          {isDeleting ? "Deleting..." : "Delete Permanent"}
+          {isDeleting ? "Deleting..." : "Delete Permanently"}
         </button>
         <button
           onClick={onCancel}
@@ -54,7 +54,7 @@ export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, c
       </div>
       
       <div className="flex items-center gap-2 text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">
-        <Terminal size={10} /> SYS.LOG: PENDING_CONFIRMATION_FROM_OPERATOR
+        <Terminal size={10} /> WAITING_FOR_OPERATOR_CONFIRMATION
       </div>
     </div>
   );
