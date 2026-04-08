@@ -25,9 +25,8 @@ export default function Transactions() {
 
   const confirmDelete = () => {
     if (transactionToDelete) {
-      deleteTransaction(transactionToDelete.id, {
-        onSuccess: () => setTransactionToDelete(null)
-      });
+      deleteTransaction(transactionToDelete.id);
+      setTransactionToDelete(null);
     }
   };
 
