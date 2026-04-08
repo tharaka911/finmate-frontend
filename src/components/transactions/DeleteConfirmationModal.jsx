@@ -1,5 +1,5 @@
 import { AlertTriangle, Trash2, X, Terminal, Loader2 } from "lucide-react";
-import { getCategoryLabel } from "../../../utils/categories";
+import { getCategoryLabel } from "../../utils/categories";
 
 export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, category, isDeleting }) {
   return (

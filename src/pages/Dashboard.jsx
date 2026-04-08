@@ -6,7 +6,7 @@ import { CreditCard, Wallet, Activity } from "lucide-react";
 import DataTable from "../components/ui/DataTable";
 import { Skeleton } from "../components/ui/Skeleton";
 import { motion } from "framer-motion";
-import { useTransactions } from "../features/transactions/hooks";
+import { useTransactions } from "../hooks/use-transactions";
 import { getCategoryLabel, getTypeLabel } from "../utils/categories";
 
 const COLORS = ["#00E599", "#FFFFFF", "#2E2E32", "#4B4B4F", "#1A1A1A"];

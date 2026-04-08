@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
-import { transactionService } from '../../api/transactions';
+import { transactionService } from '../api/transactions';
 
 // --- PERSISTENT SHIELD UTILITY ---
 const STORAGE_KEY = 'finmate_deleted_ids_v1';
@@ -98,6 +98,7 @@ export const useSettleTransaction = () => {
     },
   });
 };
+
 export const useUpdateTransaction = () => {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { X, Save, Terminal, DollarSign, CreditCard } from "lucide-react";
-import { useAddTransaction, useUpdateTransaction } from "../../features/transactions/hooks";
+import { useAddTransaction, useUpdateTransaction } from "../../hooks/use-transactions";
 import { CATEGORIES, TYPES, getCategoryLabel, getTypeLabel } from '../../utils/categories';
 
-export default function Form({ onComplete, onCancel, initialData }) {
+export default function TransactionForm({ onComplete, onCancel, initialData }) {
   const isEditing = !!initialData;
   const { mutate: addTransaction, isPending: isAdding } = useAddTransaction();
   const { mutate: updateTransaction, isPending: isUpdating } = useUpdateTransaction();

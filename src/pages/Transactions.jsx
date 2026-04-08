@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Plus, Filter, Search, CheckCircle2, Terminal, Edit3, Trash2 } from "lucide-react";
 import DataTable from "../components/ui/DataTable";
-import Form from "../components/ui/Form";
+import TransactionForm from "../components/transactions/TransactionForm";
 import { Skeleton, TableSkeleton } from "../components/ui/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   useTransactions, 
   useSettleTransaction, 
   useDeleteTransaction 
-} from "../features/transactions/hooks";
-import DeleteConfirmationModal from "../features/transactions/components/DeleteConfirmationModal";
+} from "../hooks/use-transactions";
+import DeleteConfirmationModal from "../components/transactions/DeleteConfirmationModal";
 import { getCategoryLabel } from "../utils/categories";
 
 export default function Transactions() {
@@ -162,7 +162,7 @@ export default function Transactions() {
                   onCancel={() => setTransactionToDelete(null)}
                 />
               ) : (
-                <Form 
+                <TransactionForm 
                   initialData={editingTransaction}
                   onComplete={() => {
                     setShowForm(false);
