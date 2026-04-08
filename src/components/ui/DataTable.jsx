@@ -4,10 +4,11 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-export default function DataTable({ columns, data }) {
+export default function DataTable({ columns, data, getRowId }) {
   const table = useReactTable({
     data,
     columns,
+    getRowId,
     getCoreRowModel: getCoreRowModel(),
   });
 

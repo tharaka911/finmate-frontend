@@ -199,7 +199,11 @@ export default function Transactions() {
         </div>
 
         <div className="border border-border">
-            <DataTable columns={columns} data={transactions} />
+            <DataTable 
+              columns={columns} 
+              data={transactions} 
+              getRowId={(row) => row.id}
+            />
         </div>
       </motion.div>
     </motion.div>

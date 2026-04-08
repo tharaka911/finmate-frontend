@@ -67,14 +67,23 @@ export const useDeleteTransaction = () => {
       );
 
       // Return a context object with the snapshotted value
-      return { previousTransactions };
+      return { previousTransactions, deletedId: id };
+    },
+    onSuccess: (data, variables, context) => {
+      // Reinforce the deletion in cache on success
+      queryClient.setQueryData(['transactions'], (old) => 
+        old ? old.filter((t) => t.id !== context.deletedId) : []
+      );
     },
     onError: (err, id, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData(['transactions'], context.previousTransactions);
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(['transactions'], context.previousTransactions);
+      }
     },
     onSettled: () => {
       // Always refetch after error or success to ensure we're in sync with the server
+      // We use a small delay or just invalidate to get fresh data
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
