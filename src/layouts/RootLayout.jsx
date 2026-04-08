@@ -1,7 +1,7 @@
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import { Outlet, Navigate } from "react-router-dom";
 import Header from "../components/layout/Header";
-import Landing from "../../pages/Landing";
+import Landing from "../pages/Landing";
 
 export default function RootLayout() {
   return (

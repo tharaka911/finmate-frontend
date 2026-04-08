@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, Save, Terminal } from "lucide-react";
-import { useAddTransaction } from "../features/transactions/hooks";
+import { useAddTransaction } from "../../features/transactions/hooks";
 
 const CATEGORIES = ["GROCERY", "FOOD", "FUN", "VEHICLE", "OTHER"];
 const TYPES = ["CASH", "CREDIT"];
