@@ -5,24 +5,26 @@ import { transactionService } from '../../api/transactions';
 export const useTransactions = () => {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
+
+  // 1. Reactive subscription to the blacklist
+  // This ensures that any component using useTransactions() will re-render
+  // the MOMENT an ID is added to the blacklist, even before a refetch.
+  const { data: blacklist = [] } = useQuery({
+    queryKey: ['deleted-transactions-blacklist'],
+    initialData: [],
+    staleTime: Infinity, // Keep it forever or manage manually
+  });
   
   return useQuery({
     queryKey: ['transactions'],
     queryFn: () => transactionService.getAll(getToken),
     staleTime: 1000 * 60 * 5,
-    // Add logic to hide IDs that was deleted but still appearing in refetch
+    // The select function is now "reactive" because it depends on the blacklist
+    // which is returned from the hook above.
     select: (data) => {
-      const deletedIds = queryClient.getQueryData(['deleted-transactions-blacklist']) || [];
-      if (deletedIds.length === 0) return data;
-      
-      // Filter out anyone in the blacklist
-      const filtered = data.filter(t => !deletedIds.includes(t.id));
-      
-      // Optimization: If the refetched data doesn't contain the blacklisted ID anymore,
-      // it means the server has caught up, and we can clean up the blacklist.
-      // Note: We avoid side effects in select, so we'll do cleanup in a separate sync if needed,
-      // but for now, this filtering is sufficient.
-      return filtered;
+      if (!data) return [];
+      if (blacklist.length === 0) return data;
+      return data.filter(t => !blacklist.includes(t.id));
     }
   });
 };
@@ -69,43 +71,42 @@ export const useDeleteTransaction = () => {
   return useMutation({
     mutationFn: (id) => transactionService.delete(id, getToken),
     onMutate: async (id) => {
+      // 1. Snapshot previous state
       await queryClient.cancelQueries({ queryKey: ['transactions'] });
-      const previousTransactions = queryClient.getQueryData(['transactions']);
+      const previousTotalData = queryClient.getQueryData(['transactions']);
 
-      // 1. Optimistic update
+      // 2. Add to the Reactive Blacklist immediately (Atomic)
+      queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => {
+        if (old.includes(id)) return old;
+        return [...old, id];
+      });
+
+      // 3. Optimistically update the main cache for good measure
       queryClient.setQueryData(['transactions'], (old) => 
         old ? old.filter((t) => t.id !== id) : []
       );
 
-      // 2. Add to hard blacklist immediately to prevent reappearance during mutation
-      queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => [...old, id]);
-
-      return { previousTransactions, deletedId: id };
+      return { previousTotalData, deletedId: id };
     },
     onSuccess: (data, id, context) => {
-      // Reinforce the blacklist on success
+      // Refortify the blacklist state
       queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => {
         if (old.includes(context.deletedId)) return old;
         return [...old, context.deletedId];
       });
-      
-      // Also reinforce the cache itself
-      queryClient.setQueryData(['transactions'], (old) => 
-        old ? old.filter((t) => t.id !== context.deletedId) : []
-      );
     },
     onError: (err, id, context) => {
-      // Rollback blacklist
+      // Atomic rollback of the blacklist
       queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => 
-        old.filter(item => item !== context.deletedId)
+        old.filter(itemId => itemId !== context.deletedId)
       );
       
-      if (context?.previousTransactions) {
-        queryClient.setQueryData(['transactions'], context.previousTransactions);
+      if (context?.previousTotalData) {
+        queryClient.setQueryData(['transactions'], context.previousTotalData);
       }
     },
     onSettled: () => {
-      // Sync with server
+      // Sync with server in the background
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
