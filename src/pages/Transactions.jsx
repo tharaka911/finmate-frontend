@@ -10,6 +10,7 @@ import {
   useDeleteTransaction 
 } from "../features/transactions/hooks";
 import DeleteConfirmationModal from "../features/transactions/components/DeleteConfirmationModal";
+import { getCategoryLabel } from "../utils/categories";
 
 export default function Transactions() {
   const [showForm, setShowForm] = useState(false);
@@ -44,7 +45,7 @@ export default function Transactions() {
       </span>
     )},
     { header: "Category", accessorKey: "category", cell: info => (
-      <span className="text-[10px] uppercase font-bold tracking-widest text-[#9B9B9B]">{info.getValue()}</span>
+      <span className="text-[10px] uppercase font-bold tracking-widest text-[#9B9B9B]">{getCategoryLabel(info.getValue())}</span>
     )},
     { header: "Status", accessorKey: "status", cell: info => (
       <span className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest ${info.getValue() === "SETTLED" ? "text-white/30" : "text-amber-400"}`}>

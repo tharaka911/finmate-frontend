@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { X, Save, Terminal } from "lucide-react";
+import { X, Save, Terminal, DollarSign, CreditCard } from "lucide-react";
 import { useAddTransaction, useUpdateTransaction } from "../../features/transactions/hooks";
-
-const CATEGORIES = ["GROCERY", "FOOD", "FUN", "VEHICLE", "OTHER"];
-const TYPES = ["CASH", "CREDIT"];
+import { CATEGORIES, TYPES, getCategoryLabel, getTypeLabel } from '../../utils/categories';
 
 export default function Form({ onComplete, onCancel, initialData }) {
   const isEditing = !!initialData;
@@ -86,13 +84,18 @@ export default function Form({ onComplete, onCancel, initialData }) {
           <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Payment Method</label>
           <div className="grid grid-cols-2 gap-0 border border-white/10">
             {TYPES.map(t => (
-              <button 
+              <button
                 key={t}
                 type="button"
                 onClick={() => setFormData({ ...formData, type: t })}
-                className={`py-4 text-[10px] font-bold uppercase tracking-widest transition-colors ${formData.type === t ? "bg-white text-black" : "bg-transparent text-white opacity-40 hover:opacity-100 hover:bg-white/5"}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 border transition-all text-[10px] font-bold uppercase tracking-widest ${
+                  formData.type === t 
+                    ? "bg-white text-black border-white" 
+                    : "border-white/10 text-white/40 hover:border-white/30"
+                }`}
               >
-                {t}
+                {t === "CASH" ? <DollarSign size={14} /> : <CreditCard size={14} />}
+                {getTypeLabel(t)}
               </button>
             ))}
           </div>
@@ -101,12 +104,12 @@ export default function Form({ onComplete, onCancel, initialData }) {
         <div className="space-y-3">
           <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Category</label>
           <select
-            className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-white focus:border-[#00E599] outline-none transition-all appearance-none cursor-pointer"
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            className="w-full bg-black border border-white/10 p-4 text-white text-sm focus:outline-none focus:border-[#00E599] transition-colors appearance-none uppercase tracking-widest font-bold"
           >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c} className="bg-black text-white">{c}</option>
+            {CATEGORIES.map(c => (
+              <option key={c} value={c} className="bg-black text-white">{getCategoryLabel(c)}</option>
             ))}
           </select>
         </div>

@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
 import { AlertTriangle, Trash2, X, Terminal, Loader2 } from "lucide-react";
+import { getCategoryLabel } from "../../../utils/categories";
 
 export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, category, isDeleting }) {
   return (
@@ -21,7 +21,7 @@ export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, c
           <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 opacity-60">Transaction Details</p>
           <div className="flex justify-between items-baseline">
             <span className="text-2xl font-mono text-white font-bold">${amount.toFixed(2)}</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{category}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{getCategoryLabel(category)}</span>
           </div>
         </div>
 

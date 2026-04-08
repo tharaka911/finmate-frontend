@@ -7,6 +7,7 @@ import DataTable from "../components/ui/DataTable";
 import { Skeleton } from "../components/ui/Skeleton";
 import { motion } from "framer-motion";
 import { useTransactions } from "../features/transactions/hooks";
+import { getCategoryLabel, getTypeLabel } from "../utils/categories";
 
 const COLORS = ["#00E599", "#FFFFFF", "#2E2E32", "#4B4B4F", "#1A1A1A"];
 
@@ -22,14 +23,14 @@ export default function Dashboard() {
       acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
       return acc;
     }, {})
-  ).map(([name, value]) => ({ name, value }));
+  ).map(([name, value]) => ({ name: getCategoryLabel(name), value }));
 
   const columns = [
     { header: "Date", accessorKey: "date", cell: info => <span className="font-mono text-xs opacity-70">{new Date(info.getValue()).toLocaleDateString()}</span> },
-    { header: "Category", accessorKey: "category", cell: info => <span className="text-xs font-bold uppercase tracking-tighter opacity-80">{info.getValue()}</span> },
+    { header: "Category", accessorKey: "category", cell: info => <span className="text-xs font-bold uppercase tracking-tighter opacity-80">{getCategoryLabel(info.getValue())}</span> },
     { header: "Type", accessorKey: "type", cell: info => (
       <span className={`text-[10px] font-bold uppercase tracking-widest ${info.getValue() === "CASH" ? "text-[#00E599]" : "text-white opacity-40"}`}>
-        {info.getValue()}
+        {getTypeLabel(info.getValue())}
       </span>
     )},
     { header: "Amount", accessorKey: "amount", cell: info => (

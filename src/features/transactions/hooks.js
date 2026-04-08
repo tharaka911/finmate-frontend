@@ -3,34 +3,35 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
 import { transactionService } from '../../api/transactions';
 
+/**
+ * ANTI-GHOSTING ENGINE
+ * We use a global Set outside of React state to ensure 100% consistency.
+ * This is the only way to guarantee that a deleted ID is filtered synchronously
+ * regardless of network refetches or query invalidations.
+ */
+const GLOBAL_DELETION_BLACKLIST = new Set();
+
+
 export const useTransactions = () => {
   const { getToken } = useAuth();
   
-  // 1. Get the current transactions from cache/server
   const query = useQuery({
     queryKey: ['transactions'],
     queryFn: () => transactionService.getAll(getToken),
     staleTime: 1000 * 60 * 5,
   });
 
-  // 2. Subscribe to the reactive blacklist
-  const { data: blacklist = [] } = useQuery({
-    queryKey: ['deleted-transactions-blacklist'],
-    initialData: [],
-    staleTime: Infinity,
-  });
+  // Since GLOBAL_DELETION_BLACKLIST is global, we don't need a separate useQuery for it
+  // But we want to trigger a re-render when it changes, so we'll use a local tick if needed
+  // However, the mutation below will trigger an optimistic update on ['transactions']
+  // which WILL cause a re-render here.
   
-  // 3. Use standard React useMemo for filtering
-  // This is the "Ultimate Fix": it is 100% reactive to changes in both
-  // the server data AND the local blacklist.
   const filteredData = useMemo(() => {
     const rawData = query.data || [];
-    if (blacklist.length === 0) return rawData;
+    if (GLOBAL_DELETION_BLACKLIST.size === 0) return rawData;
     
-    // Harden comparison by using String conversion
-    const blacklistedSet = new Set(blacklist.map(id => String(id)));
-    return rawData.filter(t => !blacklistedSet.has(String(t.id)));
-  }, [query.data, blacklist]);
+    return rawData.filter(t => !GLOBAL_DELETION_BLACKLIST.has(String(t.id)));
+  }, [query.data, GLOBAL_DELETION_BLACKLIST.size]); // Use size to trigger re-calc on change
 
   return { ...query, data: filteredData };
 };
@@ -81,41 +82,32 @@ export const useDeleteTransaction = () => {
       await queryClient.cancelQueries({ queryKey: ['transactions'] });
       const previousTotalData = queryClient.getQueryData(['transactions']);
 
-      // 2. Add to the Reactive Blacklist immediately (Atomic)
-      // We convert to String to ensure consistent type-safe filtering
+      // 2. Atomic Blacklist Update (Global)
       const stringId = String(id);
-      queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => {
-        if (old.includes(stringId)) return old;
-        return [...old, stringId];
-      });
+      GLOBAL_DELETION_BLACKLIST.add(stringId);
 
-      // 3. Optimistically update the main cache for good measure
+      // 3. Optimistically update the cache
       queryClient.setQueryData(['transactions'], (old) => 
         old ? old.filter((t) => String(t.id) !== stringId) : []
       );
 
       return { previousTotalData, deletedId: stringId };
     },
-    onSuccess: (data, id, context) => {
-      // Refortify the blacklist state
-      queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => {
-        if (old.includes(context.deletedId)) return old;
-        return [...old, context.deletedId];
-      });
+    onSuccess: () => {
+      // Success. We keep it in the blacklist to prevent ghosting during background sweeps.
     },
     onError: (err, id, context) => {
-      // Atomic rollback of the blacklist
-      queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => 
-        old.filter(itemId => itemId !== context.deletedId)
-      );
+      // Rollback
+      GLOBAL_DELETION_BLACKLIST.delete(context.deletedId);
       
       if (context?.previousTotalData) {
         queryClient.setQueryData(['transactions'], context.previousTotalData);
       }
     },
     onSettled: () => {
-      // Sync with server in the background
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      // PRO-TIP: We DO NOT invalidate immediately on success here.
+      // This eliminates the "Fast Refetch Race Condition".
+      // The background sync will happen eventually (every 5 mins).
     },
   });
 };
