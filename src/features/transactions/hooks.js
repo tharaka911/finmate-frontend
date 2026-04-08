@@ -79,30 +79,47 @@ export const useDeleteTransaction = () => {
       await queryClient.cancelQueries({ queryKey: ['transactions'] });
       const previousTotalData = queryClient.getQueryData(['transactions']);
 
-      // 2. Optimistically update the cache
+      // 2. Add to Safeguard Buffer (Atomic)
+      const stringId = String(id);
+      queryClient.setQueryData(['deleted-ids-buffer'], (old = []) => {
+        if (old.includes(stringId)) return old;
+        return [...old, stringId];
+      });
+
+      // 3. Set a 10s Self-Cleaning Timeout
+      setTimeout(() => {
+        queryClient.setQueryData(['deleted-ids-buffer'], (old = []) => 
+          old.filter(itemId => itemId !== stringId)
+        );
+      }, 10000);
+
+      // 4. Optimistic update
       queryClient.setQueryData(['transactions'], (old) => 
-        old ? old.filter((t) => t.id !== id) : []
+        old ? old.filter((t) => String(t.id) !== stringId) : []
       );
 
-      return { previousTotalData, deletedId: id };
+      return { previousTotalData, deletedId: stringId };
     },
     onSuccess: (data, id, context) => {
-      // Reinforce the deletion in cache on success
-      queryClient.setQueryData(['transactions'], (old) => 
-        old ? old.filter((t) => t.id !== context.deletedId) : []
-      );
+      // Reinforce buffer on success
+      queryClient.setQueryData(['deleted-ids-buffer'], (old = []) => {
+        if (old.includes(context.deletedId)) return old;
+        return [...old, context.deletedId];
+      });
     },
     onError: (err, id, context) => {
-      // Rollback on error
+      // Emergency rollback on failure
+      queryClient.setQueryData(['deleted-ids-buffer'], (old = []) => 
+        old.filter(itemId => itemId !== context.deletedId)
+      );
+      
       if (context?.previousTotalData) {
         queryClient.setQueryData(['transactions'], context.previousTotalData);
       }
     },
     onSettled: () => {
-      // Small delay to ensure DB sync before refetching
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      }, 500);
+      // Sync with server (Safeguard keeps it hidden)
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
 };
