@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { AlertTriangle, Trash2, X, Terminal } from "lucide-react";
+import { AlertTriangle, Trash2, X, Terminal, Loader2 } from "lucide-react";
 
-export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, category }) {
+export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, category, isDeleting }) {
   return (
     <div className="p-8 md:p-12 space-y-10 bg-black border border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.05)]">
       <div className="flex justify-between items-start border-b border-white/10 pb-6">
@@ -34,14 +34,20 @@ export default function DeleteConfirmationModal({ onConfirm, onCancel, amount, c
       <div className="flex gap-4 pt-6 border-t border-white/10">
         <button
           onClick={onConfirm}
-          className="flex-1 bg-red-600 text-white font-extrabold px-8 py-5 hover:bg-red-500 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-xs shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+          disabled={isDeleting}
+          className="flex-1 bg-red-600 text-white font-extrabold px-8 py-5 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-xs shadow-[0_0_20px_rgba(239,68,68,0.2)]"
         >
-          <Trash2 size={18} />
-          Confirm_Destroy
+          {isDeleting ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <Trash2 size={18} />
+          )}
+          {isDeleting ? "Purging..." : "Confirm_Destroy"}
         </button>
         <button
           onClick={onCancel}
-          className="flex-1 px-8 py-5 font-bold bg-white/5 hover:bg-white/10 transition-colors border border-white/10 text-white uppercase tracking-[0.2em] text-xs"
+          disabled={isDeleting}
+          className="flex-1 px-8 py-5 font-bold bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-white/10 text-white uppercase tracking-[0.2em] text-xs"
         >
           Abort_Action
         </button>

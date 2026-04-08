@@ -54,7 +54,27 @@ export const useDeleteTransaction = () => {
 
   return useMutation({
     mutationFn: (id) => transactionService.delete(id, getToken),
-    onSuccess: () => {
+    onMutate: async (id) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['transactions'] });
+
+      // Snapshot the previous value
+      const previousTransactions = queryClient.getQueryData(['transactions']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['transactions'], (old) => 
+        old ? old.filter((t) => t.id !== id) : []
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousTransactions };
+    },
+    onError: (err, id, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(['transactions'], context.previousTransactions);
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure we're in sync with the server
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });

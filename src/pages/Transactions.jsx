@@ -17,7 +17,7 @@ export default function Transactions() {
   const [transactionToDelete, setTransactionToDelete] = useState(null);
   const { data: transactions = [], isLoading } = useTransactions();
   const { mutate: settleTransaction } = useSettleTransaction();
-  const { mutate: deleteTransaction } = useDeleteTransaction();
+  const { mutate: deleteTransaction, isPending: isDeleting } = useDeleteTransaction();
 
   const handleDelete = (t) => {
     setTransactionToDelete(t);
@@ -154,6 +154,7 @@ export default function Transactions() {
                 <DeleteConfirmationModal 
                   amount={transactionToDelete.amount}
                   category={transactionToDelete.category}
+                  isDeleting={isDeleting}
                   onConfirm={confirmDelete}
                   onCancel={() => setTransactionToDelete(null)}
                 />
