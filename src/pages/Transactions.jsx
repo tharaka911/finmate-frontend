@@ -9,17 +9,25 @@ import {
   useSettleTransaction, 
   useDeleteTransaction 
 } from "../features/transactions/hooks";
+import DeleteConfirmationModal from "../features/transactions/components/DeleteConfirmationModal";
 
 export default function Transactions() {
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [transactionToDelete, setTransactionToDelete] = useState(null);
   const { data: transactions = [], isLoading } = useTransactions();
   const { mutate: settleTransaction } = useSettleTransaction();
   const { mutate: deleteTransaction } = useDeleteTransaction();
 
-  const handleDelete = (id) => {
-    if (window.confirm("ARE_YOU_SURE? THIS_ACTION_IS_IRREVERSIBLE.")) {
-      deleteTransaction(id);
+  const handleDelete = (t) => {
+    setTransactionToDelete(t);
+  };
+
+  const confirmDelete = () => {
+    if (transactionToDelete) {
+      deleteTransaction(transactionToDelete.id, {
+        onSuccess: () => setTransactionToDelete(null)
+      });
     }
   };
 
@@ -65,7 +73,7 @@ export default function Transactions() {
               <Edit3 size={14} />
             </button>
             <button 
-              onClick={() => handleDelete(t.id)}
+              onClick={() => handleDelete(t)}
               title="Delete"
               className="p-2 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-red-500/10"
             >
@@ -129,7 +137,7 @@ export default function Transactions() {
       </motion.div>
 
       <AnimatePresence>
-        {(showForm || editingTransaction) && (
+        {(showForm || editingTransaction || transactionToDelete) && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -142,17 +150,26 @@ export default function Transactions() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="w-full max-w-4xl max-h-full overflow-y-auto custom-scrollbar shadow-[0_0_100px_rgba(0,229,153,0.1)]"
             >
-              <Form 
-                initialData={editingTransaction}
-                onComplete={() => {
-                  setShowForm(false);
-                  setEditingTransaction(null);
-                }} 
-                onCancel={() => {
-                  setShowForm(false);
-                  setEditingTransaction(null);
-                }} 
-              />
+              {transactionToDelete ? (
+                <DeleteConfirmationModal 
+                  amount={transactionToDelete.amount}
+                  category={transactionToDelete.category}
+                  onConfirm={confirmDelete}
+                  onCancel={() => setTransactionToDelete(null)}
+                />
+              ) : (
+                <Form 
+                  initialData={editingTransaction}
+                  onComplete={() => {
+                    setShowForm(false);
+                    setEditingTransaction(null);
+                  }} 
+                  onCancel={() => {
+                    setShowForm(false);
+                    setEditingTransaction(null);
+                  }} 
+                />
+              )}
             </motion.div>
           </motion.div>
         )}
