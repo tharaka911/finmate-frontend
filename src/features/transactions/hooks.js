@@ -4,12 +4,26 @@ import { transactionService } from '../../api/transactions';
 
 export const useTransactions = () => {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   
   return useQuery({
     queryKey: ['transactions'],
     queryFn: () => transactionService.getAll(getToken),
-    // Refresh data every 5 minutes or on window focus
     staleTime: 1000 * 60 * 5,
+    // Add logic to hide IDs that was deleted but still appearing in refetch
+    select: (data) => {
+      const deletedIds = queryClient.getQueryData(['deleted-transactions-blacklist']) || [];
+      if (deletedIds.length === 0) return data;
+      
+      // Filter out anyone in the blacklist
+      const filtered = data.filter(t => !deletedIds.includes(t.id));
+      
+      // Optimization: If the refetched data doesn't contain the blacklisted ID anymore,
+      // it means the server has caught up, and we can clean up the blacklist.
+      // Note: We avoid side effects in select, so we'll do cleanup in a separate sync if needed,
+      // but for now, this filtering is sufficient.
+      return filtered;
+    }
   });
 };
 
@@ -55,35 +69,43 @@ export const useDeleteTransaction = () => {
   return useMutation({
     mutationFn: (id) => transactionService.delete(id, getToken),
     onMutate: async (id) => {
-      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: ['transactions'] });
-
-      // Snapshot the previous value
       const previousTransactions = queryClient.getQueryData(['transactions']);
 
-      // Optimistically update to the new value
+      // 1. Optimistic update
       queryClient.setQueryData(['transactions'], (old) => 
         old ? old.filter((t) => t.id !== id) : []
       );
 
-      // Return a context object with the snapshotted value
+      // 2. Add to hard blacklist immediately to prevent reappearance during mutation
+      queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => [...old, id]);
+
       return { previousTransactions, deletedId: id };
     },
-    onSuccess: (data, variables, context) => {
-      // Reinforce the deletion in cache on success
+    onSuccess: (data, id, context) => {
+      // Reinforce the blacklist on success
+      queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => {
+        if (old.includes(context.deletedId)) return old;
+        return [...old, context.deletedId];
+      });
+      
+      // Also reinforce the cache itself
       queryClient.setQueryData(['transactions'], (old) => 
         old ? old.filter((t) => t.id !== context.deletedId) : []
       );
     },
     onError: (err, id, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
+      // Rollback blacklist
+      queryClient.setQueryData(['deleted-transactions-blacklist'], (old = []) => 
+        old.filter(item => item !== context.deletedId)
+      );
+      
       if (context?.previousTransactions) {
         queryClient.setQueryData(['transactions'], context.previousTransactions);
       }
     },
     onSettled: () => {
-      // Always refetch after error or success to ensure we're in sync with the server
-      // We use a small delay or just invalidate to get fresh data
+      // Sync with server
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
