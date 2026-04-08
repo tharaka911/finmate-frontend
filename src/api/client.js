@@ -18,6 +18,7 @@ export const apiClient = async (endpoint, { body, getToken, ...customConfig } = 
       ...headers,
       ...customConfig.headers,
     },
+    credentials: 'include',
   };
 
   if (body) {
