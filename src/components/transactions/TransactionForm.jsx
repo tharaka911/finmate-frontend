@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Save, Terminal, DollarSign, CreditCard } from "lucide-react";
 import { useAddTransaction, useUpdateTransaction } from "../../hooks/use-transactions";
-import { CATEGORIES, TYPES, getCategoryLabel, getTypeLabel } from '../../utils/categories';
+import { INCOME_CATEGORIES, EXPENSE_CATEGORIES, TYPES, getCategoryLabel, getTypeLabel } from '../../utils/categories';
 
 export default function TransactionForm({ onComplete, onCancel, initialData }) {
   const isEditing = !!initialData;
@@ -12,11 +12,12 @@ export default function TransactionForm({ onComplete, onCancel, initialData }) {
 
   const [formData, setFormData] = useState({
     amount: initialData?.amount || "",
+    flow: initialData?.flow || "EXPENSE",
     date: initialData?.date 
       ? new Date(initialData.date).toISOString().split("T")[0] 
       : new Date().toISOString().split("T")[0],
     type: initialData?.type || "CASH",
-    category: initialData?.category || "GROCERY",
+    category: initialData?.category || (initialData?.flow === "INCOME" ? "SALARY" : "GROCERY"),
     notes: initialData?.notes || "",
     status: initialData?.status || "PENDING"
   });
@@ -53,6 +54,45 @@ export default function TransactionForm({ onComplete, onCancel, initialData }) {
         <button type="button" onClick={onCancel} className="text-muted-foreground hover:text-white transition-colors p-2">
           <X size={20} />
         </button>
+      </div>
+
+      {/* Flow Selection Toggle */}
+      <div className="space-y-3">
+        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Transaction Flow</label>
+        <div className="grid grid-cols-2 gap-0 border border-white/10 p-1 bg-white/[0.02]">
+          <button
+            key="EXPENSE"
+            type="button"
+            onClick={() => setFormData({ 
+              ...formData, 
+              flow: "EXPENSE",
+              category: EXPENSE_CATEGORIES.includes(formData.category) ? formData.category : "GROCERY" 
+            })}
+            className={`py-4 text-[10px] font-bold uppercase tracking-widest transition-all ${
+              formData.flow === "EXPENSE" 
+                ? "bg-white text-black font-extrabold shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
+                : "text-white/40 hover:text-white"
+            }`}
+          >
+            Expense
+          </button>
+          <button
+            key="INCOME"
+            type="button"
+            onClick={() => setFormData({ 
+              ...formData, 
+              flow: "INCOME",
+              category: INCOME_CATEGORIES.includes(formData.category) ? formData.category : "SALARY" 
+            })}
+            className={`py-4 text-[10px] font-bold uppercase tracking-widest transition-all ${
+              formData.flow === "INCOME" 
+                ? "bg-[#00E599] text-black font-extrabold shadow-[0_0_20px_rgba(0,229,153,0.3)]" 
+                : "text-white/40 hover:text-[#00E599]"
+            }`}
+          >
+            Income Source
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
@@ -115,7 +155,7 @@ export default function TransactionForm({ onComplete, onCancel, initialData }) {
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             className="w-full bg-black border border-white/10 p-4 text-white text-sm focus:outline-none focus:border-[#00E599] transition-colors appearance-none uppercase tracking-widest font-bold"
           >
-            {CATEGORIES.map(c => (
+            {(formData.flow === "INCOME" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map(c => (
               <option key={c} value={c} className="bg-black text-white">{getCategoryLabel(c)}</option>
             ))}
           </select>

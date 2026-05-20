@@ -1,4 +1,5 @@
 export const CATEGORY_MAP = {
+  // Expense categories
   GROCERY: "Grocery Store",
   FOOD: "Restaurants & Dining",
   FUN: "Entertainment & Fun",
@@ -11,8 +12,22 @@ export const CATEGORY_MAP = {
   TRAVEL: "Travel & Vacations",
   SUBSCRIPTION: "Subscriptions & Services",
   HOUSEHOLD: "Household & Maintenance",
-  OTHER: "Other Expenses"
+  OTHER: "Other Expenses",
+  
+  // Income categories
+  SALARY: "Salary & Wages",
+  FREELANCE: "Freelance & Consulting",
+  INTEREST: "Dividends & Interest",
+  GIFT: "Gifts & Grants",
+  OTHER_INCOME: "Other Income"
 };
+
+export const INCOME_CATEGORIES = ["SALARY", "FREELANCE", "INTEREST", "GIFT", "OTHER_INCOME"];
+export const EXPENSE_CATEGORIES = [
+  "GROCERY", "FOOD", "FUN", "VEHICLE", "SHOPPING", "UTILITIES", 
+  "HEALTH", "INVESTMENT", "EDUCATION", "TRAVEL", "SUBSCRIPTION", 
+  "HOUSEHOLD", "OTHER"
+];
 
 export const TYPE_MAP = {
   CASH: "Cash Payment",

@@ -50,9 +50,15 @@ export default function Transactions() {
 
   const columns = [
     { header: "Date", accessorKey: "date", cell: info => <span className="font-mono text-xs opacity-70 group-hover:opacity-100">{new Date(info.getValue()).toLocaleDateString()}</span> },
-    { header: "Amount", accessorKey: "amount", cell: info => (
-      <span className="font-mono text-white text-base font-bold">${info.getValue().toFixed(2)}</span>
-    )},
+    { header: "Amount", cell: info => {
+      const t = info.row.original;
+      const isIncome = t.flow === "INCOME";
+      return (
+        <span className={`font-mono text-base font-bold ${isIncome ? "text-[#00E599]" : "text-white"}`}>
+          {isIncome ? `+ $${t.amount.toFixed(2)}` : `- $${t.amount.toFixed(2)}`}
+        </span>
+      );
+    }},
     { header: "Type", accessorKey: "type", cell: info => (
       <span className={`text-[10px] uppercase font-bold tracking-[0.2em] px-2 py-1 border border-current ${info.getValue() === "CASH" ? "text-[#00E599] border-[#00E599]/30" : "text-white opacity-40 border-white/10"}`}>
         {info.getValue()}

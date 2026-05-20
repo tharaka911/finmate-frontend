@@ -29,21 +29,26 @@ export default function Dashboard() {
     });
   }, [transactions, selectedMonth]);
 
+  const totalIncome = useMemo(() => {
+    return filteredTransactions
+      .filter(t => t.flow === "INCOME")
+      .reduce((acc, curr) => acc + curr.amount, 0);
+  }, [filteredTransactions]);
+
   const totalSpent = useMemo(() => {
-    return filteredTransactions.reduce((acc, curr) => acc + curr.amount, 0);
+    return filteredTransactions
+      .filter(t => t.flow === "EXPENSE" || !t.flow)
+      .reduce((acc, curr) => acc + curr.amount, 0);
   }, [filteredTransactions]);
 
-  const cashSpent = useMemo(() => {
-    return filteredTransactions.filter(t => t.type === "CASH").reduce((acc, curr) => acc + curr.amount, 0);
-  }, [filteredTransactions]);
-
-  const creditSpent = useMemo(() => {
-    return filteredTransactions.filter(t => t.type === "CREDIT").reduce((acc, curr) => acc + curr.amount, 0);
-  }, [filteredTransactions]);
+  const netBalance = useMemo(() => {
+    return totalIncome - totalSpent;
+  }, [totalIncome, totalSpent]);
 
   const categoryData = useMemo(() => {
+    const expenses = filteredTransactions.filter(t => t.flow === "EXPENSE" || !t.flow);
     return Object.entries(
-      filteredTransactions.reduce((acc, curr) => {
+      expenses.reduce((acc, curr) => {
         acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
         return acc;
       }, {})
@@ -58,9 +63,15 @@ export default function Dashboard() {
         {getTypeLabel(info.getValue())}
       </span>
     )},
-    { header: "Amount", accessorKey: "amount", cell: info => (
-      <span className="font-mono text-sm font-bold text-white">${info.getValue().toFixed(2)}</span>
-    )},
+    { header: "Amount", cell: info => {
+      const t = info.row.original;
+      const isIncome = t.flow === "INCOME";
+      return (
+        <span className={`font-mono text-sm font-bold ${isIncome ? "text-[#00E599]" : "text-white"}`}>
+          {isIncome ? `+ $${t.amount.toFixed(2)}` : `- $${t.amount.toFixed(2)}`}
+        </span>
+      );
+    }},
   ];
 
   if (isLoading) {
@@ -117,20 +128,20 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 border border-border divide-y md:divide-y-0 md:divide-x divide-border bg-black/50 overflow-hidden">
         <motion.div variants={item} className="p-8 space-y-6 hover:bg-white/[0.02] transition-colors group">
           <div className="flex justify-between items-center text-muted-foreground">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Total Spending</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Total Earnings</span>
             <Activity size={14} className="group-hover:text-[#00E599] transition-colors" />
           </div>
           <div className="space-y-1">
             <p className="text-5xl font-mono font-bold tracking-tighter text-white">
               <span className="text-[#00E599] text-3xl font-light mr-1">$</span>
-              {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <div className="h-[2px] bg-[#00E599]/20 w-full overflow-hidden">
                 <motion.div 
                     initial={{ x: "-100%" }}
                     animate={{ x: "0%" }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="h-full bg-[#00E599] w-2/3 shadow-[0_0_10px_#00E599]" 
+                    className="h-full bg-[#00E599] w-full shadow-[0_0_10px_#00E599]" 
                 />
             </div>
           </div>
@@ -138,23 +149,23 @@ export default function Dashboard() {
         
         <motion.div variants={item} className="p-8 space-y-6 hover:bg-white/[0.02] transition-colors group">
           <div className="flex justify-between items-center text-muted-foreground">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Cash Balance</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Total Spending</span>
             <Wallet size={14} className="group-hover:text-white transition-colors" />
           </div>
           <p className="text-5xl font-mono font-bold tracking-tighter text-white">
             <span className="opacity-20 text-3xl font-light mr-1">$</span>
-            {cashSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </motion.div>
-
+ 
         <motion.div variants={item} className="p-8 space-y-6 hover:bg-white/[0.02] transition-colors group">
           <div className="flex justify-between items-center text-muted-foreground">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Credit Balance</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Net Cash Position</span>
             <CreditCard size={14} className="group-hover:text-white transition-colors" />
           </div>
-          <p className="text-5xl font-mono font-bold tracking-tighter text-white">
-             <span className="opacity-20 text-3xl font-light mr-1">$</span>
-             {creditSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <p className={`text-5xl font-mono font-bold tracking-tighter ${netBalance >= 0 ? "text-[#00E599]" : "text-red-500"}`}>
+             <span className="opacity-50 text-3xl font-light mr-1">$</span>
+             {netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </motion.div>
       </div>
