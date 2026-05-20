@@ -74,9 +74,16 @@ export default function TransactionForm({ onComplete, onCancel, initialData }) {
           <input
             required
             type="date"
-            className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-4 text-sm font-mono text-white focus:border-[#00E599] focus:ring-1 focus:ring-[#00E599]/20 outline-none transition-all"
+            className="w-full bg-white/[0.03] border border-white/10 rounded-none px-4 py-4 text-sm font-mono text-white focus:border-[#00E599] focus:ring-1 focus:ring-[#00E599]/20 outline-none transition-all cursor-pointer"
             value={formData.date}
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            onClick={(e) => {
+              try {
+                e.currentTarget.showPicker();
+              } catch (err) {
+                // Fallback
+              }
+            }}
           />
         </div>
 
