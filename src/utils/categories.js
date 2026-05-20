@@ -3,6 +3,14 @@ export const CATEGORY_MAP = {
   FOOD: "Restaurants & Dining",
   FUN: "Entertainment & Fun",
   VEHICLE: "Vehicle & Transport",
+  SHOPPING: "Shopping & Apparel",
+  UTILITIES: "Bills & Utilities",
+  HEALTH: "Medical & Wellness",
+  INVESTMENT: "Investments & Savings",
+  EDUCATION: "Education & Learning",
+  TRAVEL: "Travel & Vacations",
+  SUBSCRIPTION: "Subscriptions & Services",
+  HOUSEHOLD: "Household & Maintenance",
   OTHER: "Other Expenses"
 };
 
