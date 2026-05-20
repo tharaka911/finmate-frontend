@@ -162,7 +162,7 @@ export default function Dashboard() {
     ).map(([name, value]) => ({ name: getCategoryLabel(name), value }));
   }, [filteredTransactions]);
 
-  // Budget data: match budgets to the selected month/year
+  // Budget data: match budgets to the selected month/year only
   const budgetGauges = useMemo(() => {
     // Spend per category (raw keys) for the current filter
     const spendMap = filteredTransactions
@@ -172,11 +172,12 @@ export default function Dashboard() {
         return acc;
       }, {});
 
-    // Filter budgets to the current month/year (or show all if ALL selected)
-    const relevantBudgets = budgets.filter(b => {
-      if (selectedMonth === "ALL") return true;
-      return b.month === prefillMonth && b.year === prefillYear;
-    });
+    // Only show budgets for the specific selected month — never for ALL TIME
+    if (selectedMonth === "ALL") return [];
+
+    const relevantBudgets = budgets.filter(
+      b => b.month === prefillMonth && b.year === prefillYear
+    );
 
     return relevantBudgets.map(b => ({
       budget: b,
@@ -317,7 +318,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-[#00E599] rotate-45" />
               <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white">Category Budgets</h3>
-              {budgetGauges.length > 0 && (
+              {selectedMonth !== "ALL" && budgetGauges.length > 0 && (
                 <span className="text-[9px] font-mono text-white/30 border border-white/10 px-2 py-0.5">
                   {budgetGauges.filter(g => g.spent / g.budget.amount >= 1).length} overspent
                 </span>
@@ -333,12 +334,23 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {budgetGauges.length === 0 ? (
+          {selectedMonth === "ALL" ? (
+            /* Nudge: budgets are monthly — ask user to pick a month */
+            <div className="border border-dashed border-white/10 p-10 text-center space-y-3">
+              <Target size={22} className="text-white/10 mx-auto" />
+              <p className="text-[11px] text-white/30 uppercase tracking-[0.2em] font-bold">
+                Select a month to view budgets
+              </p>
+              <p className="text-[10px] text-white/20 max-w-xs mx-auto leading-relaxed">
+                Budget limits are tracked per calendar month. Pick a specific month from the selector above to see your spending vs. limits.
+              </p>
+            </div>
+          ) : budgetGauges.length === 0 ? (
             <div className="border border-dashed border-white/10 p-12 text-center space-y-3">
               <Target size={24} className="text-white/10 mx-auto" />
-              <p className="text-[11px] text-white/30 uppercase tracking-[0.2em] font-bold">No budgets set</p>
+              <p className="text-[11px] text-white/30 uppercase tracking-[0.2em] font-bold">No budgets set for this month</p>
               <p className="text-[10px] text-white/20">
-                Click <span className="text-[#00E599]">Set Budget</span> to define monthly spending limits.
+                Click <span className="text-[#00E599]">Set Budget</span> to define spending limits for this month.
               </p>
             </div>
           ) : (
