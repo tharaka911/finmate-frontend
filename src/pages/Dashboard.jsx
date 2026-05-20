@@ -12,7 +12,7 @@ import { useTransactions } from "../hooks/use-transactions";
 import { getCategoryLabel, getTypeLabel } from "../utils/categories";
 import MonthSelector from "../components/ui/MonthSelector";
 
-const COLORS = ["#00E599", "#FFFFFF", "#2E2E32", "#4B4B4F", "#1A1A1A"];
+const COLORS = ["#00E5BC", "#3B82F6", "#F59E0B", "#6B7280", "#F43F5E"];
 
 export default function Dashboard() {
   const { data: transactions = [], isLoading } = useTransactions();
