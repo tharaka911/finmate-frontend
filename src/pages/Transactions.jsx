@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useOutletContext } from "react-router-dom";
 import { Plus, Filter, Search, CheckCircle2, Terminal, Edit3, Trash2 } from "lucide-react";
 import DataTable from "../components/ui/DataTable";
 import TransactionForm from "../components/transactions/TransactionForm";
@@ -11,6 +12,7 @@ import {
 } from "../hooks/use-transactions";
 import DeleteConfirmationModal from "../components/transactions/DeleteConfirmationModal";
 import { getCategoryLabel } from "../utils/categories";
+import MonthSelector from "../components/ui/MonthSelector";
 
 export default function Transactions() {
   const [showForm, setShowForm] = useState(false);
@@ -19,6 +21,18 @@ export default function Transactions() {
   const { data: transactions = [], isLoading } = useTransactions();
   const { mutate: settleTransaction } = useSettleTransaction();
   const { mutate: deleteTransaction, isPending: isDeleting } = useDeleteTransaction();
+  const { selectedMonth, setSelectedMonth } = useOutletContext();
+
+  const filteredTransactions = useMemo(() => {
+    if (selectedMonth === "ALL") return transactions;
+    return transactions.filter(t => {
+      if (!t.date) return false;
+      const d = new Date(t.date);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}` === selectedMonth;
+    });
+  }, [transactions, selectedMonth]);
 
   const handleDelete = (t) => {
     setTransactionToDelete(t);
@@ -123,20 +137,27 @@ export default function Transactions() {
       animate="show"
       className="space-y-12 pb-20"
     >
-      <motion.div variants={item} className="flex flex-col md:flex-row justify-between items-start border-b border-white/5 pb-8 gap-6">
+      <motion.div variants={item} className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/5 pb-8 gap-6 w-full">
         <div className="space-y-4">
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tighter text-white">Transactions</h2>
           <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground flex items-center gap-2">
             <Terminal size={12} className="text-[#00E599]" /> History
           </p>
         </div>
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-white text-black font-extrabold px-8 py-3 hover:bg-[#00E599] transition-all uppercase tracking-widest text-[10px]"
-        >
-          <Plus size={16} strokeWidth={3} />
-          {showForm ? 'Cancel' : 'Add Transaction'}
-        </button>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <MonthSelector 
+            transactions={transactions} 
+            selectedMonth={selectedMonth} 
+            onChange={setSelectedMonth} 
+          />
+          <button 
+            onClick={() => setShowForm(!showForm)}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-black font-extrabold px-8 py-3 hover:bg-[#00E599] transition-all uppercase tracking-widest text-[10px] h-[46px]"
+          >
+            <Plus size={16} strokeWidth={3} />
+            {showForm ? 'Cancel' : 'Add Transaction'}
+          </button>
+        </div>
       </motion.div>
 
       <AnimatePresence>
@@ -202,7 +223,7 @@ export default function Transactions() {
         <div className="border border-border">
             <DataTable 
               columns={columns} 
-              data={transactions} 
+              data={filteredTransactions} 
               getRowId={(row) => row.id}
             />
         </div>

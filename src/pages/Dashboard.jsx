@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { useOutletContext } from "react-router-dom";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell 
@@ -8,22 +10,45 @@ import { Skeleton } from "../components/ui/Skeleton";
 import { motion } from "framer-motion";
 import { useTransactions } from "../hooks/use-transactions";
 import { getCategoryLabel, getTypeLabel } from "../utils/categories";
+import MonthSelector from "../components/ui/MonthSelector";
 
 const COLORS = ["#00E599", "#FFFFFF", "#2E2E32", "#4B4B4F", "#1A1A1A"];
 
 export default function Dashboard() {
   const { data: transactions = [], isLoading } = useTransactions();
+  const { selectedMonth, setSelectedMonth } = useOutletContext();
 
-  const totalSpent = transactions.reduce((acc, curr) => acc + curr.amount, 0);
-  const cashSpent = transactions.filter(t => t.type === "CASH").reduce((acc, curr) => acc + curr.amount, 0);
-  const creditSpent = transactions.filter(t => t.type === "CREDIT").reduce((acc, curr) => acc + curr.amount, 0);
+  const filteredTransactions = useMemo(() => {
+    if (selectedMonth === "ALL") return transactions;
+    return transactions.filter(t => {
+      if (!t.date) return false;
+      const d = new Date(t.date);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}` === selectedMonth;
+    });
+  }, [transactions, selectedMonth]);
 
-  const categoryData = Object.entries(
-    transactions.reduce((acc, curr) => {
-      acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
-      return acc;
-    }, {})
-  ).map(([name, value]) => ({ name: getCategoryLabel(name), value }));
+  const totalSpent = useMemo(() => {
+    return filteredTransactions.reduce((acc, curr) => acc + curr.amount, 0);
+  }, [filteredTransactions]);
+
+  const cashSpent = useMemo(() => {
+    return filteredTransactions.filter(t => t.type === "CASH").reduce((acc, curr) => acc + curr.amount, 0);
+  }, [filteredTransactions]);
+
+  const creditSpent = useMemo(() => {
+    return filteredTransactions.filter(t => t.type === "CREDIT").reduce((acc, curr) => acc + curr.amount, 0);
+  }, [filteredTransactions]);
+
+  const categoryData = useMemo(() => {
+    return Object.entries(
+      filteredTransactions.reduce((acc, curr) => {
+        acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
+        return acc;
+      }, {})
+    ).map(([name, value]) => ({ name: getCategoryLabel(name), value }));
+  }, [filteredTransactions]);
 
   const columns = [
     { header: "Date", accessorKey: "date", cell: info => <span className="font-mono text-xs opacity-70">{new Date(info.getValue()).toLocaleDateString()}</span> },
@@ -74,11 +99,18 @@ export default function Dashboard() {
       animate="show"
       className="space-y-16 pb-20"
     >
-      <motion.div variants={item} className="space-y-4">
-        <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white flex flex-wrap items-center gap-4">
-           Live View <span className="text-[10px] font-mono text-[#00E599] border border-[#00E599]/30 px-2 py-1 rounded-sm uppercase tracking-widest animate-pulse">Sync</span>
-        </h2>
-        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">Real-time spending overview</p>
+      <motion.div variants={item} className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/5 pb-8 gap-6 w-full">
+        <div className="space-y-4">
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white flex flex-wrap items-center gap-4">
+             Live View <span className="text-[10px] font-mono text-[#00E599] border border-[#00E599]/30 px-2 py-1 rounded-sm uppercase tracking-widest animate-pulse">Sync</span>
+          </h2>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">Real-time spending overview</p>
+        </div>
+        <MonthSelector 
+          transactions={transactions} 
+          selectedMonth={selectedMonth} 
+          onChange={setSelectedMonth} 
+        />
       </motion.div>
 
       {/* Stats Grid */}
@@ -134,7 +166,7 @@ export default function Dashboard() {
             <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-white">Recent Transactions</h3>
           </div>
           <div className="border border-border">
-            <DataTable columns={columns.slice(1)} data={transactions.slice(0, 5)} />
+            <DataTable columns={columns.slice(1)} data={filteredTransactions.slice(0, 5)} />
           </div>
         </motion.div>
 
